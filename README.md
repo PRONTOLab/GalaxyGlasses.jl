@@ -344,7 +344,8 @@ julia --project=. gen_pysides_from_original_julia_test.jl
 - `gen_outputs.jl`: FITS output.
 - `test/runtests.jl`: regression coverage.
 
-The older stage-specific scripts remain as reference implementations. Numeric
-work intended for both backends belongs in `reactant_pipeline.jl`. File I/O,
-DataFrames, dictionaries, and random-number generation should remain in the
-host layer so Reactant receives only arrays and simple numerical containers.
+Numeric work intended for both backends belongs in `reactant_pipeline.jl`.
+File I/O, DataFrames, dictionaries, and random-number generation should remain
+in `pipeline_host.jl` so Reactant receives only arrays and simple numerical
+containers. The earlier stage-specific translations were removed after their
+corrected functionality and regression coverage moved into these two files.
