@@ -1,31 +1,28 @@
-include("load_params.jl")
-include("load_sides_csv.jl")
-include("gen_sfr_props.jl")
-include("gen_magnification.jl")
-include("gen_fluxes.jl")
-include("gen_fluxes_filter.jl")
-include("gen_lines.jl")
-include("gen_outputs.jl")
+include("gen_pysides_from_original.jl")
 
+function run_julia_smoke(;
+    dataset="data/SIDES_Bethermin2017_short2.csv",
+    param_path="SIDES_from_original.par",
+    nrows=nothing,
+    filters=false,
+    write_output=true,
+)
+    params = load_params(param_path)
+    catalog = load_sides_csv(dataset, nrows)
+    inputs = build_forward_inputs(catalog)
+    parameter_data = build_forward_parameters(params; filters)
+    noise = make_simulation_noise(length(inputs.redshift); seed=BENCHMARK_SEED)
+    output = forward_model(inputs, parameter_data.numeric, noise)
+    add_output_columns!(
+        catalog,
+        output,
+        parameter_data.numeric.dust.lambda_list,
+        parameter_data.filter_names,
+    )
+    write_output && gen_outputs(catalog, params)
+    return catalog
+end
 
-csv_idl_path = "/Volumes/T7 Shield/SIDES/test/SIDES_Bethermin2017_short.csv"
-
-params = load_params("SIDES_from_original.par")
-
-cat = load_sides_csv(csv_idl_path)
-
-cat = gen_sfr_props(cat, params)
-
-cat = gen_magnification(cat, params)
-
-cat = gen_fluxes(cat, params)
-
-cat = gen_fluxes_filter(cat, params)
-
-cat = gen_CO(cat, params)
-
-cat = gen_CII(cat, params)
-
-cat = gen_CI(cat, params)
-
-gen_outputs(cat, params)
+if abspath(PROGRAM_FILE) == @__FILE__
+    run_julia_smoke()
+end
