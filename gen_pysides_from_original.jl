@@ -4,7 +4,6 @@ using DataFrames
 Reactant.set_default_backend("cpu")
 
 include("load_params.jl")
-include("load_sides_csv.jl")
 include("reactant_pipeline.jl")
 include("pipeline_host.jl")
 include("gen_outputs.jl")
@@ -76,7 +75,7 @@ function run_reactant_pipeline(;
     filters=false,
     write_output=false,
 )
-    params = load_params(param_path)
+    params = load_par_file(param_path)
     catalog_template = load_sides_csv(dataset, nrows)
     inputs = build_forward_inputs(catalog_template)
     parameter_data = build_forward_parameters(params; filters)
