@@ -13,7 +13,7 @@ function synthetic_fixture()
     )
 
     sfr = (
-        Chab2Salp_num=10.0 ^ 0.24,
+        Chab2Salp_num=10.0^0.24,
         Mt0=10.5296,
         alpha1=0.223213,
         alpha2=0.0912848,
@@ -58,7 +58,7 @@ function synthetic_fixture()
     sed_ms = [
         (0.1 + 0.01 * u_index) * (1.0 + 0.2 * lambda_index)
         for lambda_index in eachindex(sed_lambda),
-            u_index in eachindex(umean_grid)
+        u_index in eachindex(umean_grid)
     ]
     sed_sb = 1.5 .* sed_ms
     ratio_ms = collect(0.8 .- 0.0002 .* eachindex(umean_grid))
@@ -108,7 +108,7 @@ function synthetic_fixture()
         Idiffuse=idiffuse,
         Iclump=iclump,
         SLED_SB_Birkin=true,
-        rJup1_Birkin=Float64[0.9, 0.6, 0.32, 0.35, 0.3, 0.22, 0.22 * (7 / 8) ^ 2],
+        rJup1_Birkin=Float64[0.9, 0.6, 0.32, 0.35, 0.3, 0.22, 0.22*(7/8)^2],
         nu_CII=1900.54,
         sigma_dex_CII=0.2,
         a_CI10=1.07,
@@ -128,8 +128,8 @@ end
 @testset "Reactant-compatible forward model" begin
     fixture = synthetic_fixture()
 
-    @test normal_quantile(0.5) ≈ 0.0 atol=1.0e-12
-    @test normal_quantile(0.975) ≈ 1.959963986 atol=1.0e-8
+    @test normal_quantile(0.5) ≈ 0.0 atol = 1.0e-12
+    @test normal_quantile(0.975) ≈ 1.959963986 atol = 1.0e-8
     sorted_values = Float64[0.0, 0.5, 0.5, 2.0, 10.0]
     queries = Float64[-1.0, 0.0, 0.5, 1.0, 10.0, 11.0]
     @test searchsortedlast_vector(sorted_values, queries) ==
@@ -159,8 +159,8 @@ end
                 fixture.params.dust.sed_tables,
             )[1]
             sed = julia_output.issb[galaxy] ?
-                fixture.params.dust.sed_tables.nuLnu_SB[:, u_index] :
-                fixture.params.dust.sed_tables.nuLnu_MS[:, u_index]
+                  fixture.params.dust.sed_tables.nuLnu_SB[:, u_index] :
+                  fixture.params.dust.sed_tables.nuLnu_MS[:, u_index]
             lambda_rest = wavelength / (1.0 + fixture.inputs.redshift[galaxy])
             nu_rest = C_M_PER_S / (lambda_rest * 1.0e-6)
             linear_interp_sorted(
@@ -170,7 +170,7 @@ end
             ) / nu_rest
         end
         for galaxy in eachindex(fixture.inputs.redshift),
-            wavelength in fixture.params.dust.lambda_list
+        wavelength in fixture.params.dust.lambda_list
     ]
     @test sed_shape ≈ expected_sed_shape
 
@@ -224,7 +224,7 @@ end
     @test "ICO87" in names(catalog)
     @test nrow(catalog) == 8
 
-    source_params = load_params(joinpath(@__DIR__, "..", "SIDES_from_original.par"))
+    source_params = load_par_file(joinpath(@__DIR__, "..", "SIDES_from_original.par"))
     mktempdir() do directory
         filter_path = joinpath(directory, "SYNTHETIC.h5")
         filter_table = fixture.params.filters[1]

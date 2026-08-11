@@ -3,13 +3,14 @@ using DataFrames
 
 Reactant.set_default_backend("cpu")
 
-include("load_params.jl")
+include("io.jl")
 include("reactant_pipeline.jl")
 include("pipeline_host.jl")
-include("gen_outputs.jl")
 
 function print_usage(io=stdout)
-    println(io, """
+    println(
+        io,
+        """
 Usage:
   julia --project=. gen_pysides_from_original.jl [options]
 
@@ -23,7 +24,8 @@ Options:
 
 This is the Reactant-only production driver. For Julia-versus-Reactant
 comparisons, use benchmark_reactant.jl.
-""")
+"""
+    )
 end
 
 function parse_command_line(args)
@@ -51,7 +53,7 @@ function parse_command_line(args)
         elseif argument in ("--dataset", "--rows")
             index == length(args) &&
                 throw(ArgumentError("$argument requires a value"))
-            value = args[index + 1]
+            value = args[index+1]
             if argument == "--dataset"
                 values[:dataset] = value
             else

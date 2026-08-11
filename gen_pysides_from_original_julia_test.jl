@@ -7,7 +7,7 @@ function run_julia_smoke(;
     filters=false,
     write_output=true,
 )
-    params = load_params(param_path)
+    params = load_par_file(param_path)
     catalog = load_sides_csv(dataset, nrows)
     inputs = build_forward_inputs(catalog)
     parameter_data = build_forward_parameters(params; filters)
