@@ -1,4 +1,4 @@
-include("gen_pysides_from_original.jl")
+import BayesMM
 
 function run_julia_smoke(;
     dataset="data/SIDES_Bethermin2017_short2.csv",
@@ -7,19 +7,19 @@ function run_julia_smoke(;
     filters=false,
     write_output=true,
 )
-    params = load_par_file(param_path)
-    catalog = load_sides_csv(dataset, nrows)
-    inputs = build_forward_inputs(catalog)
-    parameter_data = build_forward_parameters(params; filters)
-    noise = make_simulation_noise(length(inputs.redshift); seed=BENCHMARK_SEED)
-    output = forward_model(inputs, parameter_data.numeric, noise)
-    add_output_columns!(
+    params = BayesMM.load_par_file(param_path)
+    catalog = BayesMM.load_sides_csv(dataset, nrows)
+    inputs = BayesMM.build_forward_inputs(catalog)
+    parameter_data = BayesMM.build_forward_parameters(params; filters)
+    noise = BayesMM.make_simulation_noise(length(inputs.redshift))
+    output = BayesMM.forward_model(inputs, parameter_data.numeric, noise)
+    BayesMM.add_output_columns!(
         catalog,
         output,
         parameter_data.numeric.dust.lambda_list,
         parameter_data.filter_names,
     )
-    write_output && gen_outputs(catalog, params)
+    write_output && BayesMM.gen_outputs(catalog, params)
     return catalog
 end
 

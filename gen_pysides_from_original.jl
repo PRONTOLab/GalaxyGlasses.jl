@@ -1,11 +1,7 @@
-using Reactant
-using DataFrames
-
+import BayesMM
+import Reactant
+using Printf: @sprintf
 Reactant.set_default_backend("cpu")
-
-include("io.jl")
-include("reactant_pipeline.jl")
-include("pipeline_host.jl")
 
 function print_usage(io=stdout)
     println(
@@ -19,7 +15,7 @@ Options:
   --rows N           Read only the first N rows
   --large            Use the large CSV (all rows unless followed by --rows)
   --filters          Include filter-grid fluxes (requires every FILTER_NAME.h5)
-  --write-output     Write the Reactant result using gen_outputs.jl
+  --write-output     Write the final FITS catalog
   --help             Show this message
 
 This is the Reactant-only production driver. For Julia-versus-Reactant
@@ -77,15 +73,15 @@ function run_reactant_pipeline(;
     filters=false,
     write_output=false,
 )
-    params = load_par_file(param_path)
-    catalog_template = load_sides_csv(dataset, nrows)
-    inputs = build_forward_inputs(catalog_template)
-    parameter_data = build_forward_parameters(params; filters)
-    noise = make_simulation_noise(length(inputs.redshift); seed=BENCHMARK_SEED)
+    params = BayesMM.load_par_file(param_path)
+    catalog_template = BayesMM.load_sides_csv(dataset, nrows)
+    inputs = BayesMM.build_forward_inputs(catalog_template)
+    parameter_data = BayesMM.build_forward_parameters(params; filters)
+    noise = BayesMM.make_simulation_noise(length(inputs.redshift))
 
     n_gal = length(inputs.redshift)
     println("Running the Reactant forward model for $n_gal rows...")
-    reactant_run = run_reactant_forward_model(
+    reactant_run = BayesMM.run_reactant_forward_model(
         inputs,
         parameter_data.numeric,
         noise,
@@ -98,14 +94,14 @@ function run_reactant_pipeline(;
     println("  device-to-host: ", @sprintf("%.6f s", timings.device_to_host))
     println("  total:          ", @sprintf("%.6f s", timings.total))
 
-    output_catalog = add_output_columns!(
+    output_catalog = BayesMM.add_output_columns!(
         copy(catalog_template),
         reactant_run.output,
         parameter_data.numeric.dust.lambda_list,
         parameter_data.filter_names,
     )
     if write_output
-        gen_outputs(output_catalog, params)
+        BayesMM.gen_outputs(output_catalog, params)
     end
 
     return (; output_catalog, reactant_run, params)

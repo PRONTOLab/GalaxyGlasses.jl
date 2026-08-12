@@ -1,6 +1,26 @@
 using Test
+import Reactant
+using DataFrames: DataFrame, names, nrow
+using HDF5: h5open
+using BayesMM:
+    C_M_PER_S,
+    MPC_TO_M,
+    add_output_columns!,
+    benchmark_forward_model,
+    benchmark_result_row,
+    forward_model,
+    gen_outputs,
+    interpolate_sed_fluxes,
+    linear_interp_sorted,
+    load_filter_table,
+    load_par_file,
+    make_simulation_noise,
+    normal_quantile,
+    output_arrays!,
+    searchsortedlast_vector,
+    sed_uindex
 
-include("../gen_pysides_from_original.jl")
+Reactant.set_default_backend("cpu")
 
 function synthetic_fixture()
     redshift = Float64[0.01, 0.1, 0.3, 0.7, 1.5, 3.0, 8.0, 20.0]
@@ -121,7 +141,7 @@ function synthetic_fixture()
         nu_CI21=809.34,
     )
     params = (; sfr, magnification, dust, filters=(filter_table,), lines)
-    noise = make_simulation_noise(n_gal; seed=BENCHMARK_SEED)
+    noise = make_simulation_noise(n_gal)
     return (; inputs, params, noise)
 end
 
