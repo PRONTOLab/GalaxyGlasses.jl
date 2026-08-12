@@ -338,14 +338,15 @@ julia --project=. gen_pysides_from_original_julia_test.jl
 
 - `gen_pysides_from_original.jl`: Reactant-only production driver.
 - `benchmark_reactant.jl`: Julia-versus-Reactant benchmark driver.
-- `reactant_pipeline.jl`: numerical model shared by Julia and Reactant.
-- `pipeline_host.jl`: data loading, deterministic random inputs, output
+- `src/BayesMM.jl`: package entry point.
+- `src/io.jl`: parameter, catalog, and FITS I/O.
+- `src/reactant_pipeline.jl`: numerical model shared by Julia and Reactant.
+- `src/pipeline_host.jl`: data loading, deterministic random inputs, output
   comparison, catalog assembly, timing, and reports.
-- `gen_outputs.jl`: FITS output.
 - `test/runtests.jl`: regression coverage.
 
-Numeric work intended for both backends belongs in `reactant_pipeline.jl`.
+Numeric work intended for both backends belongs in `src/reactant_pipeline.jl`.
 File I/O, DataFrames, dictionaries, and random-number generation should remain
-in `pipeline_host.jl` so Reactant receives only arrays and simple numerical
+in `src/pipeline_host.jl` so Reactant receives only arrays and simple numerical
 containers. The earlier stage-specific translations were removed after their
 corrected functionality and regression coverage moved into these two files.
