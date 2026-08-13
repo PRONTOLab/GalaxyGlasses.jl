@@ -42,5 +42,17 @@ Manifest-v*.toml
 LocalPreferences.toml
 JuliaLocalPreferences.toml
 
-#ignore astro data
-data/
+# Ignore local catalogs and generated data, except tracked model inputs.
+data/*
+!data/Daddi15_SLED.txt
+!data/Herschel_maps.par
+!data/Psupmu_table_Bethermin17.txt
+!data/SIDES_from_original.par
+!data/SMF_SIDES_2017.txt
+
+# Generated benchmark output
+benchmark/results/
+benchmark/results_summary.json
+benchmark/bayesmm_scaling.pdf
+benchmark/bayesmm_scaling.svg
+report.md
