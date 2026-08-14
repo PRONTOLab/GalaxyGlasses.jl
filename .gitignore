@@ -55,4 +55,6 @@ benchmark/results/
 benchmark/results_summary.json
 benchmark/bayesmm_scaling.pdf
 benchmark/bayesmm_scaling.svg
+benchmark/bayesmmfwd_scaling.pdf
+benchmark/bayesmmfwd_scaling.svg
 report.md

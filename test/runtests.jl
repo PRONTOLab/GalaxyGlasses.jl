@@ -2,7 +2,7 @@ using Test
 import Reactant
 using DataFrames: DataFrame, names, nrow
 using HDF5: h5open
-using BayesMM:
+using BayesMMfwd:
     C_M_PER_S,
     MPC_TO_M,
     add_output_columns!,

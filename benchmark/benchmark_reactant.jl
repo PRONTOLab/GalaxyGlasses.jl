@@ -86,7 +86,7 @@ function run_all_benchmarks(options)
     @info sprint(io -> versioninfo(io; verbose=true))
 
     results = Dict{String,Dict{String,Float64}}()
-    n_gal = run_bayesmm_benchmark!(
+    n_gal = run_bayesmmfwd_benchmark!(
         results,
         backend;
         dataset=options.dataset,
@@ -95,9 +95,9 @@ function run_all_benchmarks(options)
     )
 
     mode = options.filters ? "forward_filters" : "forward"
-    prefix = "bayesmm_$(mode)_$n_gal"
+    prefix = "bayesmmfwd_$(mode)_$n_gal"
     save_results(results, options.results_dir, prefix, backend)
-    pretty_print_results(results, "BayesMM", backend)
+    pretty_print_results(results, "BayesMMfwd", backend)
     return results
 end
 

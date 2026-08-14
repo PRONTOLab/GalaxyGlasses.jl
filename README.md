@@ -9,7 +9,7 @@ parameters, and explicit random draws, it computes:
 - dust SED quantities, monochromatic fluxes, and optional filter fluxes;
 - CO, [CII], and [CI] line luminosities and fluxes.
 
-The core entry point is `BayesMM.forward_model(inputs, params, noise)`. It is
+The core entry point is `BayesMMfwd.forward_model(inputs, params, noise)`. It is
 pure numerical Julia: file loading, random-number generation, backend
 selection, compilation, and catalog output remain outside the function. The
 same forward-model source therefore runs as ordinary Julia or compiles with
@@ -38,21 +38,21 @@ enabled.
 ## Forward-model API
 
 ```julia
-using BayesMM
+using BayesMMfwd
 
-configuration = BayesMM.load_par_file("data/SIDES_from_original.par")
-catalog = BayesMM.load_sides_csv("data/SIDES_Bethermin2017_short2.csv")
+configuration = BayesMMfwd.load_par_file("data/SIDES_from_original.par")
+catalog = BayesMMfwd.load_sides_csv("data/SIDES_Bethermin2017_short2.csv")
 
-inputs = BayesMM.build_forward_inputs(catalog)
-parameters = BayesMM.build_forward_parameters(configuration; filters=false)
-noise = BayesMM.make_simulation_noise(length(inputs.redshift))
+inputs = BayesMMfwd.build_forward_inputs(catalog)
+parameters = BayesMMfwd.build_forward_parameters(configuration; filters=false)
+noise = BayesMMfwd.make_simulation_noise(length(inputs.redshift))
 
-output = BayesMM.forward_model(inputs, parameters.numeric, noise)
+output = BayesMMfwd.forward_model(inputs, parameters.numeric, noise)
 ```
 
 The explicit `noise` argument makes a run reproducible and lets all backends
 consume identical random draws. The result is a named tuple of arrays; use
-`BayesMM.add_output_columns!` to attach those arrays to a catalog.
+`BayesMMfwd.add_output_columns!` to attach those arrays to a catalog.
 
 The Reactant path changes data placement and compilation, not the model:
 
@@ -63,7 +63,7 @@ reactant_inputs = Reactant.to_rarray(inputs)
 reactant_parameters = Reactant.to_rarray(parameters.numeric)
 reactant_noise = Reactant.to_rarray(noise)
 
-compiled_forward = Reactant.@compile sync=true BayesMM.forward_model(
+compiled_forward = Reactant.@compile sync=true BayesMMfwd.forward_model(
     reactant_inputs,
     reactant_parameters,
     reactant_noise,

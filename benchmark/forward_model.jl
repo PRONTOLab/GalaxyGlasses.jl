@@ -1,4 +1,4 @@
-using BayesMM: BayesMM
+using BayesMMfwd: BayesMMfwd
 using Reactant: Reactant
 
 include("common.jl")
@@ -40,7 +40,7 @@ function check_forward_output(reference, candidate; rtol=2.0e-6, atol=1.0e-8)
     return nothing
 end
 
-function run_bayesmm_benchmark!(
+function run_bayesmmfwd_benchmark!(
     results::Dict,
     backend::String;
     dataset="data/SIDES_Bethermin2017_short2.csv",
@@ -48,11 +48,11 @@ function run_bayesmm_benchmark!(
     nrows=nothing,
     filters=false,
 )
-    params = BayesMM.load_par_file(param_path)
-    catalog = BayesMM.load_sides_csv(dataset, nrows)
-    inputs = BayesMM.build_forward_inputs(catalog)
-    parameter_data = BayesMM.build_forward_parameters(params; filters)
-    noise = BayesMM.make_simulation_noise(length(inputs.redshift))
+    params = BayesMMfwd.load_par_file(param_path)
+    catalog = BayesMMfwd.load_sides_csv(dataset, nrows)
+    inputs = BayesMMfwd.build_forward_inputs(catalog)
+    parameter_data = BayesMMfwd.build_forward_parameters(params; filters)
+    noise = BayesMMfwd.make_simulation_noise(length(inputs.redshift))
 
     cpu_args = (inputs, parameter_data.numeric, noise)
     ra_args = (
@@ -63,17 +63,17 @@ function run_bayesmm_benchmark!(
 
     n_gal = length(inputs.redshift)
     mode = filters ? "forward_filters" : "forward"
-    benchmark_name = "BayesMM [$n_gal galaxies]/$mode"
+    benchmark_name = "BayesMMfwd [$n_gal galaxies]/$mode"
     reactant_output = run_benchmark!(
         results,
         backend,
         benchmark_name,
-        BayesMM.forward_model,
+        BayesMMfwd.forward_model,
         cpu_args,
         ra_args;
         configs=[BenchmarkConfiguration("Default")],
     )
-    reference = BayesMM.forward_model(cpu_args...)
+    reference = BayesMMfwd.forward_model(cpu_args...)
     check_forward_output(reference, materialize_output(reactant_output))
     return n_gal
 end
