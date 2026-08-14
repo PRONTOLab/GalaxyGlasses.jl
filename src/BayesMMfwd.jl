@@ -1,4 +1,4 @@
-module BayesMM
+module BayesMMfwd
 
 using Reactant
 

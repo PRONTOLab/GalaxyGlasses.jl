@@ -4,8 +4,9 @@ using CairoMakie
 using JSON
 using Printf
 
+# Keep pre-rename result files readable.
 const RESULT_FILE =
-    r"^bayesmm_(?:forward|forward_filters)_(\d+)_(CPU|CUDA|TPU)benchmarks\.json$"
+    r"^bayesmm(?:fwd)?_(?:forward|forward_filters)_(\d+)_(CPU|CUDA|TPU)benchmarks\.json$"
 const IMPLEMENTATIONS = ("Julia", "Reactant CPU", "Reactant CUDA", "Reactant TPU")
 const LABELS = Dict(
     "Julia" => "Julia",
@@ -75,7 +76,7 @@ function read_measurements(results_dir)
         end
     end
 
-    isempty(runtimes) && error("no BayesMM runtime JSON files found below $results_dir")
+    isempty(runtimes) && error("no BayesMMfwd runtime JSON files found below $results_dir")
     return (; runtimes, host_bytes, backend_peaks)
 end
 
@@ -185,7 +186,7 @@ function make_plot(svg_path, pdf_path, measurements)
 
     figure = Figure(size=(1500, 500), fontsize=13)
     header = figure[1, 1:3] = GridLayout()
-    Label(header[1, 1], "BayesMM forward-model scaling"; fontsize=22, font=:bold)
+    Label(header[1, 1], "BayesMMfwd forward-model scaling"; fontsize=22, font=:bold)
     common = (
         xscale=log10,
         yscale=log10,
@@ -246,8 +247,8 @@ end
 function parse_options(args)
     options = Dict(
         "--results-dir" => "benchmark/results/paper-2026-08-13",
-        "--svg" => "benchmark/bayesmm_scaling.svg",
-        "--pdf" => "benchmark/bayesmm_scaling.pdf",
+        "--svg" => "benchmark/bayesmmfwd_scaling.svg",
+        "--pdf" => "benchmark/bayesmmfwd_scaling.pdf",
         "--summary" => "benchmark/results_summary.json",
     )
     if "--help" in args
