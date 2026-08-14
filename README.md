@@ -94,8 +94,72 @@ limit a run, or `--filters` to include configured filter fluxes. Run with
 ## Performance and reproducibility
 
 The Julia-versus-Reactant harness is isolated under [`benchmark/`](benchmark/).
-It records machine-readable timing and allocation data and includes a Julia
-plotting script for SVG and PDF figures.
+It records machine-readable timing, allocation, overhead, provenance, and
+correctness data.
+
+### Reproducing the paper figures
+
+Run every command below from the BayesMMfwd.jl repository root. Raw benchmark
+JSON is read from benchmark/results/, and generated paper figures, LaTeX table
+fragments, summaries, and handoff notes are written to
+benchmark/plots/generated/. Figure 1 is the implementation architecture
+authored in the manuscript's LaTeX/TikZ source; this repository does not
+generate a fig1 file.
+
+Instantiate the isolated benchmark environment once:
+
+```bash
+julia --project=benchmark -e 'using Pkg; Pkg.instantiate()'
+```
+
+Generate every paper artifact from the canonical raw directory with:
+
+```bash
+julia --startup-file=no --history-file=no --project=benchmark \
+  benchmark/plots/plot_results.jl \
+  --results-dir benchmark/results \
+  --output-dir benchmark/plots/generated
+```
+
+Paper item | Generated artifact | Description
+---|---|---
+Figure 1 | Not generated (LaTeX/TikZ) | BayesMMfwd implementation architecture
+Figure 2 | benchmark/plots/generated/fig2_runtime_speedup.pdf | Warm runtime and speedup
+Figure 3 | benchmark/plots/generated/fig3_overheads_amortization.pdf | Measured overheads and derived amortization
+Figure 4 | benchmark/plots/generated/fig4_memory_scaling.pdf | GPU peak memory and host allocation traffic
+Table II | benchmark/plots/generated/table2_largest_common.tex | 1,000,000-source comparison
+Table III | benchmark/plots/generated/table3_correctness.tex | Julia/Reactant numerical agreement
+
+The complete paper matrix consists of these eight commands. Every command writes
+uniquely named sibling JSON files directly into the same canonical raw
+directory:
+
+```bash
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 1024 --backend CPU --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 100000 --backend CPU --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 1000000 --backend CPU --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 5584998 --backend CPU --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 1024 --backend CUDA --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 100000 --backend CUDA --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 1000000 --backend CUDA --results-dir benchmark/results
+julia --startup-file=no --history-file=no --project=benchmark benchmark/benchmark_reactant.jl --large --rows 5584998 --backend CUDA --results-dir benchmark/results
+```
+
+Run each command once. Each invocation relies on the harness's internal
+Chairmarks sampling for Julia and Reactant CPU or its synchronized 25-execution
+XProf sampling for Reactant GPU; no external replication loop is needed.
+Filters remain disabled, explicit noise uses seed 1234, ordinary Julia uses one
+Julia thread, and Reactant CPU retains XLA's default CPU parallelization.
+
+The 5,584,998-source GPU case may exhaust the usable memory of the selected RTX
+5090. A recorded OOM is a valid reproduced outcome and is shown explicitly in
+the generated artifacts; it is not an artifact-generation failure.
+
+Expected results: Reactant CPU should cross over after the smallest catalog, and
+the single GPU should be fastest at the larger successfully measured sizes.
+These are qualitative checks only. Consult
+benchmark/plots/generated/results_summary.json for the exact recorded values,
+status of every point, correctness extrema, and break-even calculations.
 
 ## Tests
 
