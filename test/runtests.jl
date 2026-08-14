@@ -6,8 +6,6 @@ using BayesMM:
     C_M_PER_S,
     MPC_TO_M,
     add_output_columns!,
-    benchmark_forward_model,
-    benchmark_result_row,
     forward_model,
     gen_outputs,
     interpolate_sed_fluxes,
@@ -16,11 +14,35 @@ using BayesMM:
     load_par_file,
     make_simulation_noise,
     normal_quantile,
-    output_arrays!,
     searchsortedlast_vector,
     sed_uindex
 
 Reactant.set_default_backend("cpu")
+
+function materialize_test_output(value::NamedTuple)
+    names = keys(value)
+    values = map(materialize_test_output, Tuple(value))
+    return NamedTuple{names}(values)
+end
+
+materialize_test_output(value::Tuple) = map(materialize_test_output, value)
+materialize_test_output(value::AbstractArray) = Array(value)
+materialize_test_output(value) = value
+
+function collect_output_arrays!(result, prefix, value::NamedTuple)
+    for name in keys(value)
+        child_prefix = isempty(prefix) ? String(name) : "$prefix.$name"
+        collect_output_arrays!(result, child_prefix, getproperty(value, name))
+    end
+    return result
+end
+
+function collect_output_arrays!(result, prefix, value::AbstractArray)
+    push!(result, prefix => value)
+    return result
+end
+
+collect_output_arrays!(result, prefix, value) = result
 
 function synthetic_fixture()
     redshift = Float64[0.01, 0.1, 0.3, 0.7, 1.5, 3.0, 8.0, 20.0]
@@ -194,34 +216,43 @@ end
     ]
     @test sed_shape ≈ expected_sed_shape
 
-    arrays = output_arrays!(Pair{String,Any}[], "", julia_output)
+    arrays = collect_output_arrays!(Pair{String,Any}[], "", julia_output)
     @test all(
         !(eltype(array) <: AbstractFloat) || all(isfinite, array)
         for (_, array) in arrays
     )
 
-    benchmark = benchmark_forward_model(
-        fixture.inputs,
-        fixture.params,
-        fixture.noise;
-        samples=1,
+    inputs_reactant = Reactant.to_rarray(fixture.inputs)
+    params_reactant = Reactant.to_rarray(fixture.params)
+    noise_reactant = Reactant.to_rarray(fixture.noise)
+    compiled_forward = Reactant.@compile sync=true forward_model(
+        inputs_reactant,
+        params_reactant,
+        noise_reactant,
     )
-    @test benchmark.correctness.passed
-    @test benchmark.timings.reactant_compile > 0.0
-    @test benchmark.timings.reactant_first > 0.0
-    @test benchmark.timings.reactant_first_device_to_host > 0.0
-    @test benchmark.timings.reactant_materialized_median >=
-          benchmark.timings.reactant_warm_median
-    row = benchmark_result_row(
-        "synthetic",
-        length(fixture.inputs.redshift),
-        benchmark.timings,
-        benchmark.correctness;
-        samples=1,
-        filter_count=1,
+    reactant_output = compiled_forward(
+        inputs_reactant,
+        params_reactant,
+        noise_reactant,
     )
-    @test row.correctness_passed
-    @test row.julia_over_reactant_materialized_speedup > 0.0
+    Reactant.synchronize(reactant_output)
+    reactant_host_output = materialize_test_output(reactant_output)
+    reference_arrays = collect_output_arrays!(Pair{String,Any}[], "", julia_output)
+    reactant_arrays = Dict(collect_output_arrays!(
+        Pair{String,Any}[],
+        "",
+        reactant_host_output,
+    ))
+    @test Set(first.(reference_arrays)) == Set(keys(reactant_arrays))
+    for (name, expected) in reference_arrays
+        actual = reactant_arrays[name]
+        @test size(actual) == size(expected)
+        if eltype(expected) <: Bool
+            @test actual == expected
+        else
+            @test isapprox(actual, expected; rtol=2.0e-6, atol=1.0e-8)
+        end
+    end
 end
 
 @testset "catalog and host output" begin
@@ -244,7 +275,12 @@ end
     @test "ICO87" in names(catalog)
     @test nrow(catalog) == 8
 
-    source_params = load_par_file(joinpath(@__DIR__, "..", "SIDES_from_original.par"))
+    source_params = load_par_file(joinpath(
+        @__DIR__,
+        "..",
+        "data",
+        "SIDES_from_original.par",
+    ))
     mktempdir() do directory
         filter_path = joinpath(directory, "SYNTHETIC.h5")
         filter_table = fixture.params.filters[1]

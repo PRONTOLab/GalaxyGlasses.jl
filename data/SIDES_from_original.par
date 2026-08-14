@@ -54,7 +54,7 @@ SFR_max = 1000.
 
 
 ################# Magnification (using Yashar recipe)#################
-path_mu_file = "./Psupmu_table_Bethermin17.txt" #Path of the pre-computed probability of magnification
+path_mu_file = "./data/Psupmu_table_Bethermin17.txt" #Path of the pre-computed probability of magnification
 ######################################################################
 
 
@@ -86,7 +86,7 @@ filter_list = ["MIPS24", "PACS70", "PACS100", "PACS160", "SPIRE250", "SPIRE350",
 
 
 ############# Parameters to generate the CO lines #######################
-SLED_filename = "./Daddi15_SLED.txt"
+SLED_filename = "./data/Daddi15_SLED.txt"
 nu_CO = 115.271208 #GHz
 sigma_dex_CO10 = 0.2 #roughly the value in the litterature
 SLED_SB_Birkin = true
