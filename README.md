@@ -1,6 +1,6 @@
-# BayesMMfwd.jl
+# GalaxyGlasses.jl
 
-BayesMMfwd.jl implements the numerical forward model used to generate
+GalaxyGlasses.jl implements the numerical forward model used to generate
 SIDES-style millimeter-source catalogs. Given galaxy properties, model
 parameters, and explicit random draws, it computes:
 
